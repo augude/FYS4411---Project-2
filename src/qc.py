@@ -8,6 +8,7 @@ class One_qubit:
         self.X = np.array([[0, 1], [1, 0]])
         self.Y = np.array([[0, -1j], [1j, 0]])
         self.H = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+        self.S = np.array([[1, 0], [0, 1j]])
 
     def set_state(self, state):
         if abs(np.linalg.norm(state) - 1) > 1e-10:
@@ -50,7 +51,6 @@ class One_qubit:
     
 class Two_qubit(One_qubit):
     def __init__(self):   
-        # how to acces the variables stored in the parent class
         super().__init__()
         self.state = np.zeros(4, dtype=np.complex_)
         self.CNOT01 = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
@@ -76,6 +76,13 @@ class Two_qubit(One_qubit):
             self.state = np.kron(self.H, self.I).dot(self.state)
         elif qubit == 1:
             self.state = np.kron(self.I, self.H).dot(self.state)
+        return self.state
+
+    def apply_sdag(self, qubit):
+        if qubit == 0:
+            self.state = np.kron(self.S.conj().T, self.I).dot(self.state)
+        elif qubit == 1:
+            self.state = np.kron(self.I, self.S.conj().T).dot(self.state)
         return self.state
 
     def apply_x(self, qubit):
