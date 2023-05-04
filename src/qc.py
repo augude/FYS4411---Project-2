@@ -122,3 +122,73 @@ class Two_qubit(One_qubit):
         elif qubit == 1:
             self.state = np.kron(self.I, Ry).dot(self.state)
         return self.state
+
+class Four_qubit(Two_qubit):
+    #This is based on the two qubit class since the Lipkin model at most acts on two qubits at the time
+    def __init__(self):
+        super().__init__()
+        self.state = np.zeros(16, dtype=np.complex_)
+
+    def apply_cnot10(self, qubit1):
+        # can only be applied for adjecent qubits
+        if qubit1 == 0:
+            op = np.kron(self.CNOT10, np.kron(self.I, self.I))
+            return np.dot(op, self.state)
+        elif qubit1 == 1:
+            op = np.kron(self.I, np.kron(self.CNOT10, self.I))
+            return np.dot(op, self.state)
+        elif qubit1 == 2:
+            op = np.kron(self.I, np.kron(self.I, self.CNOT10))
+            return np.dot(op, self.state)
+        else:
+            print('qubit1 must be 0, 1, or 2')   
+
+    def apply_cnot01(self, qubit1):
+        # can only be applied for adjecent qubits
+        if qubit1 == 0:
+            op = np.kron(self.CNOT01, np.kron(self.I, self.I))
+            return np.dot(op, self.state)
+        elif qubit1 == 1:
+            op = np.kron(self.I, np.kron(self.CNOT01, self.I))
+            return np.dot(op, self.state)
+        elif qubit1 == 2:
+            op = np.kron(self.I, np.kron(self.I, self.CNOT01))
+            return np.dot(op, self.state)
+        else:
+            print('qubit1 must be 0, 1, or 2')
+
+    def apply_swap(self, qubit1):
+         # can only be applied for adjecent qubits
+        if qubit1 == 0:
+            op = np.kron(self.SWAP, np.kron(self.I, self.I))
+            return np.dot(op, self.state)
+        elif qubit1 == 1:
+            op = np.kron(self.I, np.kron(self.SWAP, self.I))
+            return np.dot(op, self.state)
+        elif qubit1 == 2:
+            op = np.kron(self.I, np.kron(self.I, self.SWAP))
+            return np.dot(op, self.state)
+        else:
+            print('qubit1 must be 0, 1, or 2')   
+        
+    def apply_hadamard(self, qubit):
+        if qubit == 0:
+            self.state = np.kron(self.H, np.kron(self.I, np.kron(self.I, self.I))).dot(self.state)
+        elif qubit == 1:
+            self.state = np.kron(self.I, np.kron(self.H, np.kron(self.I, self.I))).dot(self.state)
+        elif qubit == 2:
+            self.state = np.kron(self.I, np.kron(self.I, np.kron(self.H, self.I))).dot(self.state)
+        elif qubit == 3:
+            self.state = np.kron(self.I, np.kron(self.I, np.kron(self.I, self.H))).dot(self.state)
+        return self.state
+
+    def apply_sdag(self, qubit):
+        if qubit == 0:
+            self.state = np.kron(self.S.conj().T, np.kron(self.I, np.kron(self.I, self.I))).dot(self.state)
+        elif qubit == 1:
+            self.state = np.kron(self.I, np.kron(self.S.conj().T, np.kron(self.I, self.I))).dot(self.state)
+        elif qubit == 2:
+            self.state = np.kron(self.I, np.kron(self.I, np.kron(self.S.conj().T, self.I))).dot(self.state)
+        elif qubit == 3:
+            self.state = np.kron(self.I, np.kron(self.I, np.kron(self.I, self.S.conj().T))).dot(self.state)
+        return self.state
