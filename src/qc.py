@@ -1,35 +1,24 @@
 import numpy as np 
 
-class One_qubit:
-    def __init__(self):
-        self.state = np.zeros(2, dtype=np.complex_)
+class Qubit:
+    def __init__(self, N):
+        self.N = N
+        self.state = np.zeros(int(2**N), dtype=np.complex_)
         self.I = np.eye(2)
         self.Z = np.array([[1, 0], [0, -1]])
         self.X = np.array([[0, 1], [1, 0]])
         self.Y = np.array([[0, -1j], [1j, 0]])
         self.H = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
         self.S = np.array([[1, 0], [0, 1j]])
+        self.CNOT01 = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+        self.CNOT10 = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]])
+        self.SWAP = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
+
 
     def set_state(self, state):
         if abs(np.linalg.norm(state) - 1) > 1e-10:
             raise ValueError("The state vector must be normalized.")
         self.state = state
-
-    def apply_hadamard(self):
-        self.state = np.dot(self.H, self.state)
-        return self.state
-
-    def apply_x(self):
-        self.state = np.dot(self.X, self.state)
-        return self.state
-
-    def apply_y(self):
-        self.state = np.dot(self.Y, self.state)
-        return self.state
-
-    def apply_z(self):
-        self.state = np.dot(self.Z, self.state)
-        return self.state
 
     def measure(self, num_shots=1):
         prob = np.abs(self.state)**2
@@ -39,156 +28,43 @@ class One_qubit:
         self.state[outcome[-1]] = 1
         return outcome
     
-    def rotate_x(self, theta):
+    def Rx(self, theta):
         # implement rotation around x axis
         Rx = np.cos(theta/2) * self.I - 1j * np.sin(theta/2) * self.X
-        self.state = np.dot(Rx, self.state)
+        return Rx
 
-    def rotate_y(self, phi):    
+    def Ry(self, phi):    
         # implement rotation around y axis
         Ry = np.cos(phi/2) * self.I - 1j * np.sin(phi/2) * self.Y
-        self.state = np.dot(Ry, self.state)
+        return Ry
     
-class Two_qubit(One_qubit):
-    def __init__(self):   
-        super().__init__()
-        self.state = np.zeros(4, dtype=np.complex_)
-        self.CNOT01 = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
-        self.CNOT10 = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]])
-        self.SWAP = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
 
-        # np.random.seed(0)
-
-    def apply_cnot01(self):
-        self.state = np.dot(self.CNOT01, self.state)
-        return self.state
-    
-    def apply_cnot10(self):
-        self.state = np.dot(self.CNOT10, self.state)
-        return self.state
-    
-    def apply_swap(self):
-        self.state = np.dot(self.SWAP, self.state)
-        return self.state
-    
-    def apply_hadamard(self, qubit):
-        if qubit == 0:
-            self.state = np.kron(self.H, self.I).dot(self.state)
-        elif qubit == 1:
-            self.state = np.kron(self.I, self.H).dot(self.state)
-        return self.state
-
-    def apply_sdag(self, qubit):
-        if qubit == 0:
-            self.state = np.kron(self.S.conj().T, self.I).dot(self.state)
-        elif qubit == 1:
-            self.state = np.kron(self.I, self.S.conj().T).dot(self.state)
-        return self.state
-
-    def apply_x(self, qubit):
-        if qubit == 0:
-            self.state = np.kron(self.X, self.I).dot(self.state)
-        elif qubit == 1:
-            self.state = np.kron(self.I, self.X).dot(self.state)    
-        return self.state
-
-    def apply_y(self, qubit):
-        if qubit == 0:
-            self.state = np.kron(self.Y, self.I).dot(self.state)
-        elif qubit == 1:
-            self.state = np.kron(self.I, self.Y).dot(self.state)
-        return self.state
-        
-    def apply_z(self, qubit):
-        if qubit == 0:
-            self.state = np.kron(self.Z, self.I).dot(self.state)
-        elif qubit == 1:
-            self.state = np.kron(self.I, self.Z).dot(self.state)
-        return self.state
-        
-    def rotate_x(self, theta, qubit):
-        Rx = np.cos(theta/2) * self.I - 1j * np.sin(theta/2) * self.X
-        if qubit == 0:
-            self.state = np.kron(Rx, self.I).dot(self.state)
-        elif qubit == 1:
-            self.state = np.kron(self.I, Rx).dot(self.state)
-        return self.state
-
-    def rotate_y(self, phi, qubit):    
-        # implement rotation around y axis
-        Ry = np.cos(phi/2) * self.I - 1j * np.sin(phi/2) * self.Y
-        if qubit == 0:
-            self.state = np.kron(Ry, self.I).dot(self.state)
-        elif qubit == 1:
-            self.state = np.kron(self.I, Ry).dot(self.state)
-        return self.state
-
-class Four_qubit(Two_qubit):
-    #This is based on the two qubit class since the Lipkin model at most acts on two qubits at the time
-    def __init__(self):
-        super().__init__()
-        self.state = np.zeros(16, dtype=np.complex_)
-
-    def apply_cnot10(self, qubit1):
-        # can only be applied for adjecent qubits
-        if qubit1 == 0:
-            op = np.kron(self.CNOT10, np.kron(self.I, self.I))
-            return np.dot(op, self.state)
-        elif qubit1 == 1:
-            op = np.kron(self.I, np.kron(self.CNOT10, self.I))
-            return np.dot(op, self.state)
-        elif qubit1 == 2:
-            op = np.kron(self.I, np.kron(self.I, self.CNOT10))
-            return np.dot(op, self.state)
-        else:
-            print('qubit1 must be 0, 1, or 2')   
-
-    def apply_cnot01(self, qubit1):
-        # can only be applied for adjecent qubits
-        if qubit1 == 0:
-            op = np.kron(self.CNOT01, np.kron(self.I, self.I))
-            return np.dot(op, self.state)
-        elif qubit1 == 1:
-            op = np.kron(self.I, np.kron(self.CNOT01, self.I))
-            return np.dot(op, self.state)
-        elif qubit1 == 2:
-            op = np.kron(self.I, np.kron(self.I, self.CNOT01))
-            return np.dot(op, self.state)
-        else:
-            print('qubit1 must be 0, 1, or 2')
-
-    def apply_swap(self, qubit1):
-         # can only be applied for adjecent qubits
-        if qubit1 == 0:
-            op = np.kron(self.SWAP, np.kron(self.I, self.I))
-            return np.dot(op, self.state)
-        elif qubit1 == 1:
-            op = np.kron(self.I, np.kron(self.SWAP, self.I))
-            return np.dot(op, self.state)
-        elif qubit1 == 2:
-            op = np.kron(self.I, np.kron(self.I, self.SWAP))
-            return np.dot(op, self.state)
-        else:
-            print('qubit1 must be 0, 1, or 2')   
-        
-    def apply_hadamard(self, qubit):
-        if qubit == 0:
-            self.state = np.kron(self.H, np.kron(self.I, np.kron(self.I, self.I))).dot(self.state)
-        elif qubit == 1:
-            self.state = np.kron(self.I, np.kron(self.H, np.kron(self.I, self.I))).dot(self.state)
-        elif qubit == 2:
-            self.state = np.kron(self.I, np.kron(self.I, np.kron(self.H, self.I))).dot(self.state)
-        elif qubit == 3:
-            self.state = np.kron(self.I, np.kron(self.I, np.kron(self.I, self.H))).dot(self.state)
-        return self.state
-
-    def apply_sdag(self, qubit):
-        if qubit == 0:
-            self.state = np.kron(self.S.conj().T, np.kron(self.I, np.kron(self.I, self.I))).dot(self.state)
-        elif qubit == 1:
-            self.state = np.kron(self.I, np.kron(self.S.conj().T, np.kron(self.I, self.I))).dot(self.state)
-        elif qubit == 2:
-            self.state = np.kron(self.I, np.kron(self.I, np.kron(self.S.conj().T, self.I))).dot(self.state)
-        elif qubit == 3:
-            self.state = np.kron(self.I, np.kron(self.I, np.kron(self.I, self.S.conj().T))).dot(self.state)
-        return self.state
+def get_energy(angles, number_shots, unitaries,  prepare_state, constants, const_term=None, target = None):
+    """
+        Unitaries is a list of unitaries that are applied to the state
+        constants is a list of constants that are multiplied with the expectation values
+        const_term is a constant that is added to the expectation value (corresponds to the constant in front of the identity)
+    """
+    N = int(np.log2(unitaries[0].shape[0]))
+    # print(N)
+    qubit = Qubit(N)
+    init_state = prepare_state(angles, N, target)
+    measures = np.zeros((len(unitaries), number_shots))
+    for index, U in enumerate(unitaries):
+        qubit.set_state(init_state)
+        qubit.state = U@qubit.state
+        measure = qubit.measure(number_shots)
+        measures[index] = measure
+    exp_vals = np.zeros(len(measures)) 
+    for index in range(len(exp_vals)):
+        counts = [len(np.where(measures[index] == i)[0]) for i in range(2**N)] 
+        for outcome, count in enumerate(counts):
+            if outcome < 2**N//2:
+                exp_vals[index] += count #the first half of the outcomes correspond to 0 in the first qubit
+            elif outcome >= 2**N//2:
+                exp_vals[index] -= count #the latter half of the outcomes correspond to 1 in the first qubit
+    if const_term is None:
+        exp_val = np.sum(constants * exp_vals) / number_shots
+    else:
+        exp_val = np.sum(constants * exp_vals) / number_shots + const_term
+    return exp_val
