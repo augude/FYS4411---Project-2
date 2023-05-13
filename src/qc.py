@@ -1,6 +1,9 @@
 import numpy as np 
 
 class Qubit:
+    """
+    Class for a qubit simulator.
+    """
     def __init__(self, N):
         self.N = N
         self.state = np.zeros(int(2**N), dtype=np.complex_)
@@ -38,33 +41,3 @@ class Qubit:
         Ry = np.cos(phi/2) * self.I - 1j * np.sin(phi/2) * self.Y
         return Ry
     
-
-def get_energy(angles, number_shots, unitaries,  prepare_state, constants, const_term=None, target = None):
-    """
-        Unitaries is a list of unitaries that are applied to the state
-        constants is a list of constants that are multiplied with the expectation values
-        const_term is a constant that is added to the expectation value (corresponds to the constant in front of the identity)
-    """
-    N = int(np.log2(unitaries[0].shape[0]))
-    # print(N)
-    qubit = Qubit(N)
-    init_state = prepare_state(angles, N, target)
-    measures = np.zeros((len(unitaries), number_shots))
-    for index, U in enumerate(unitaries):
-        qubit.set_state(init_state)
-        qubit.state = U@qubit.state
-        measure = qubit.measure(number_shots)
-        measures[index] = measure
-    exp_vals = np.zeros(len(measures)) 
-    for index in range(len(exp_vals)):
-        counts = [len(np.where(measures[index] == i)[0]) for i in range(2**N)] 
-        for outcome, count in enumerate(counts):
-            if outcome < 2**N//2:
-                exp_vals[index] += count #the first half of the outcomes correspond to 0 in the first qubit
-            elif outcome >= 2**N//2:
-                exp_vals[index] -= count #the latter half of the outcomes correspond to 1 in the first qubit
-    if const_term is None:
-        exp_val = np.sum(constants * exp_vals) / number_shots
-    else:
-        exp_val = np.sum(constants * exp_vals) / number_shots + const_term
-    return exp_val
